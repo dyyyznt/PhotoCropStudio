@@ -2,6 +2,7 @@ import io
 import json
 import os
 import zipfile
+import uvicorn
 from typing import List, Optional, Tuple, Dict, Any
 
 import cv2
@@ -453,6 +454,5 @@ def serve_index():
 
 
 if __name__ == "__main__":
-    import uvicorn
-    print("Starting PhotoCrop Studio server at http://localhost:8000 (0.0.0.0:8000) ...")
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
