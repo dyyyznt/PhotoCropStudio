@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhotoCrop Studio - Intelligent Face & Shoulder Auto-Cropper</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white font-bold text-xl">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold text-white tracking-tight">PhotoCrop Studio</h1>
+            <span class="text-[10px] uppercase font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full">Vision Pro</span>
+          </div>
+          <p class="text-xs text-slate-400">Intelligent Face & Shoulder Level Batch Cropper</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div id="backendStatusBadge" class="inline-flex items-center text-xs font-medium text-slate-400 bg-slate-900 border border-slate-800 px-3 py-1 rounded-full">
+          <span class="w-2 h-2 rounded-full bg-slate-500 mr-2"></span> Connecting backend...
+        </div>
+        
+        <button id="btnDemoSamples" class="text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+          <span>✨ Load Demo Photos</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- LEFT COLUMN: Dropzone & Upload Queue (8 cols) -->
+      <section class="lg:col-span-8 space-y-6">
+
+        <!-- Interactive Drag-and-Drop Dropzone -->
+        <div id="dropzone" class="relative group border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-slate-900/60 hover:bg-slate-900/90 rounded-2xl p-8 text-center transition-all duration-200 shadow-xl cursor-pointer">
+          <input type="file" id="fileInput" multiple accept="image/*" class="hidden">
+          <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden">
+
+          <div class="max-w-md mx-auto space-y-4">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-indigo-950/60 border border-indigo-800/60 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform duration-200 shadow-inner">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+            </div>
+
+            <div>
+              <h3 class="text-base font-semibold text-white">Drag & drop photos or folder here</h3>
+              <p class="text-xs text-slate-400 mt-1">Supports bulk upload of folders and multiple .JPG, .PNG, .WEBP images</p>
+            </div>
+
+            <div class="flex items-center justify-center gap-3 pt-2">
+              <button type="button" id="btnSelectFiles" class="text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl transition-all shadow-md shadow-indigo-600/30 flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Select Photos
+              </button>
+              
+              <button type="button" id="btnSelectFolder" class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl transition-all flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                Upload Folder
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Uploaded Images Queue Section -->
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 shadow-xl">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-sm font-bold text-white tracking-wide">Image Processing Queue</h2>
+              <span id="queueCountBadge" class="text-xs font-semibold bg-indigo-950/80 text-indigo-300 border border-indigo-800/60 px-2.5 py-0.5 rounded-full">0 photos</span>
+            </div>
+            
+            <button id="btnClearAll" class="text-xs text-slate-400 hover:text-rose-400 transition-colors flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              Clear All
+            </button>
+          </div>
+
+          <!-- Empty Queue Placeholder -->
+          <div id="emptyQueueState" class="py-12 text-center">
+            <div class="w-12 h-12 mx-auto rounded-full bg-slate-800/80 flex items-center justify-center text-slate-500 mb-3">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <p class="text-sm text-slate-400">No images uploaded yet</p>
+            <p class="text-xs text-slate-500 mt-1">Upload photos above or click "Load Demo Photos" to test</p>
+          </div>
+
+          <!-- Cards Grid -->
+          <div id="queueContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 pt-4">
+            <!-- Dynamically injected cards -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- RIGHT COLUMN: UI Customization Controls & Batch Export (4 cols) -->
+      <aside class="lg:col-span-4 space-y-6">
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-6 sticky top-20">
+          
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+              Crop Settings
+            </h2>
+            <span class="text-[11px] text-slate-400">Applies to all</span>
+          </div>
+
+          <!-- 1. Aspect Ratio Selection -->
+          <div class="space-y-2.5">
+            <label class="block text-xs font-semibold text-slate-300">Target Aspect Ratio</label>
+            <div class="grid grid-cols-3 gap-2">
+              
+              <button type="button" data-aspect="1:1" class="aspect-btn bg-slate-800 hover:bg-slate-700/80 border border-slate-700 p-2 rounded-xl text-center transition-all group">
+                <div class="w-5 h-5 mx-auto border-2 border-slate-400 rounded group-hover:border-indigo-400 mb-1"></div>
+                <div class="text-xs font-bold text-slate-200">1:1</div>
+                <div class="text-[10px] text-slate-400">Square</div>
+              </button>
+
+              <button type="button" data-aspect="3:4" class="aspect-btn bg-indigo-600/30 border-2 border-indigo-500 ring-2 ring-indigo-500 p-2 rounded-xl text-center transition-all group">
+                <div class="w-4 h-5 mx-auto border-2 border-indigo-400 rounded mb-1"></div>
+                <div class="text-xs font-bold text-indigo-300">3:4</div>
+                <div class="text-[10px] text-indigo-300">Pas Foto</div>
+              </button>
+
+              <button type="button" data-aspect="4:5" class="aspect-btn bg-slate-800 hover:bg-slate-700/80 border border-slate-700 p-2 rounded-xl text-center transition-all group">
+                <div class="w-4 h-5 mx-auto border-2 border-slate-400 rounded group-hover:border-indigo-400 mb-1"></div>
+                <div class="text-xs font-bold text-slate-200">4:5</div>
+                <div class="text-[10px] text-slate-400">Portrait</div>
+              </button>
+
+              <button type="button" data-aspect="9:16" class="aspect-btn bg-slate-800 hover:bg-slate-700/80 border border-slate-700 p-2 rounded-xl text-center transition-all group">
+                <div class="w-3 h-5 mx-auto border-2 border-slate-400 rounded group-hover:border-indigo-400 mb-1"></div>
+                <div class="text-xs font-bold text-slate-200">9:16</div>
+                <div class="text-[10px] text-slate-400">Story/Reel</div>
+              </button>
+
+              <button type="button" data-aspect="4:3" class="aspect-btn bg-slate-800 hover:bg-slate-700/80 border border-slate-700 p-2 rounded-xl text-center transition-all group">
+                <div class="w-5 h-4 mx-auto border-2 border-slate-400 rounded group-hover:border-indigo-400 mb-1"></div>
+                <div class="text-xs font-bold text-slate-200">4:3</div>
+                <div class="text-[10px] text-slate-400">Landscape</div>
+              </button>
+
+              <button type="button" data-aspect="16:9" class="aspect-btn bg-slate-800 hover:bg-slate-700/80 border border-slate-700 p-2 rounded-xl text-center transition-all group">
+                <div class="w-6 h-3 mx-auto border-2 border-slate-400 rounded group-hover:border-indigo-400 mb-1"></div>
+                <div class="text-xs font-bold text-slate-200">16:9</div>
+                <div class="text-[10px] text-slate-400">Widescreen</div>
+              </button>
+
+            </div>
+
+            <!-- Custom Ratio inputs -->
+            <button type="button" data-aspect="custom" class="w-full text-xs font-medium text-slate-300 hover:text-white bg-slate-800/70 hover:bg-slate-800 border border-slate-700 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all">
+              <span>Custom Aspect Ratio (W : H)</span>
+            </button>
+
+            <div id="customRatioInputs" class="hidden grid grid-cols-2 gap-2 pt-1">
+              <div>
+                <label class="text-[10px] text-slate-400">Width Ratio</label>
+                <input type="number" id="customRatioW" value="3" min="1" step="0.1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400">Height Ratio</label>
+                <input type="number" id="customRatioH" value="4" min="1" step="0.1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500">
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Safe Area & Margin Sliders -->
+          <div class="space-y-4 pt-2 border-t border-slate-800">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-300">Margins & Safe Area</label>
+              <span class="text-[11px] text-indigo-400">Face & Shoulder Anchor</span>
+            </div>
+
+            <!-- Headroom Margin -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-400">Headroom (Above Head)</span>
+                <span id="labelHeadMargin" class="font-mono text-indigo-400 font-semibold">35%</span>
+              </div>
+              <input type="range" id="sliderHeadMargin" min="0.1" max="0.9" step="0.05" value="0.35" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <!-- Shoulder Margin -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-400">Shoulder Level (Torso Depth)</span>
+                <span id="labelShoulderMargin" class="font-mono text-indigo-400 font-semibold">125%</span>
+              </div>
+              <input type="range" id="sliderShoulderMargin" min="0.5" max="2.2" step="0.05" value="1.25" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <!-- Shoulder Width Padding -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-400">Shoulder Width (Sides)</span>
+                <span id="labelSideMargin" class="font-mono text-indigo-400 font-semibold">65%</span>
+              </div>
+              <input type="range" id="sliderSideMargin" min="0.2" max="1.5" step="0.05" value="0.65" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+            </div>
+          </div>
+
+          <!-- 3. Padding & Background Fill Options -->
+          <div class="space-y-3 pt-2 border-t border-slate-800">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-semibold text-slate-300">Padding & Background Fill</label>
+              <span class="text-[10px] text-emerald-400 font-medium">✨ Backdrop Extension</span>
+            </div>
+            <p class="text-[11px] text-slate-400">When 3:4 crop extends beyond photo borders:</p>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" data-fill-mode="auto_studio" class="fill-mode-btn ring-2 ring-indigo-500 border-indigo-500 bg-indigo-950/40 p-2.5 rounded-xl border border-slate-700 text-left transition-all">
+                <div class="text-indigo-400 mb-1 flex items-center justify-between">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                  <span class="text-[9px] uppercase px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold">Auto</span>
+                </div>
+                <div class="text-xs font-bold text-white">Auto Studio Match</div>
+                <div class="text-[10px] text-slate-400">Sample studio backdrop</div>
+              </button>
+
+              <button type="button" data-fill-mode="edge" class="fill-mode-btn p-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700/70 text-left transition-all">
+                <div class="text-slate-400 mb-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                </div>
+                <div class="text-xs font-bold text-white">Edge Fill</div>
+                <div class="text-[10px] text-slate-400">Replicate boundary</div>
+              </button>
+
+              <button type="button" data-fill-mode="blur" class="fill-mode-btn p-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700/70 text-left transition-all">
+                <div class="text-slate-400 mb-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                </div>
+                <div class="text-xs font-bold text-white">Smart Blur</div>
+                <div class="text-[10px] text-slate-400">Aesthetic portrait blur</div>
+              </button>
+
+              <button type="button" data-fill-mode="solid" class="fill-mode-btn p-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700/70 text-left transition-all">
+                <div class="text-slate-400 mb-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4 5 5 0 015-5c1.4 0 2 .5 2 .5s.6-.5 2-.5a5 5 0 015 5 4 4 0 01-4 4H7z"/></svg>
+                </div>
+                <div class="text-xs font-bold text-white">Manual Color</div>
+                <div class="text-[10px] text-slate-400">Color picker / Hex</div>
+              </button>
+            </div>
+
+            <!-- Solid Color Customization -->
+            <div id="solidColorOptions" class="hidden space-y-2 pt-2">
+              <div class="flex items-center justify-between text-[11px] text-slate-400">
+                <span>Color Preset:</span>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" data-color-swatch="#DC2626" class="w-4 h-4 rounded-full bg-red-600 ring-1 ring-white/20 hover:scale-125 transition-transform" title="Pas Foto Merah"></button>
+                  <button type="button" data-color-swatch="#2563EB" class="w-4 h-4 rounded-full bg-blue-600 ring-1 ring-white/20 hover:scale-125 transition-transform" title="Pas Foto Biru"></button>
+                  <button type="button" data-color-swatch="#FFFFFF" class="w-4 h-4 rounded-full bg-white ring-1 ring-black/20 hover:scale-125 transition-transform" title="Putih Formal"></button>
+                  <button type="button" data-color-swatch="#1E293B" class="w-4 h-4 rounded-full bg-slate-800 ring-1 ring-white/20 hover:scale-125 transition-transform" title="Studio Dark"></button>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <input type="color" id="padColorPicker" value="#FFFFFF" class="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer p-0.5">
+                <input type="text" id="padColorHex" value="#FFFFFF" maxlength="7" class="w-24 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-mono uppercase text-center focus:outline-none focus:border-indigo-500">
+                
+                <button type="button" id="btnEyedropper" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg py-1 px-2 text-xs text-slate-300 flex items-center justify-center gap-1">
+                  <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+                  Pick from Screen
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Export Format & Quality -->
+          <div class="space-y-3 pt-2 border-t border-slate-800">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[11px] text-slate-400">Format</label>
+                <select id="selectOutputFormat" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                  <option value="original">Same as Original</option>
+                  <option value="jpeg">JPEG (.jpg)</option>
+                  <option value="png">PNG (.png)</option>
+                  <option value="webp">WebP (.webp)</option>
+                </select>
+              </div>
+              <div>
+                <div class="flex justify-between text-[11px] text-slate-400">
+                  <span>Quality</span>
+                  <span id="labelQuality" class="font-mono text-indigo-400">95%</span>
+                </div>
+                <input type="range" id="sliderQuality" min="70" max="100" step="5" value="95" class="w-full h-1.5 mt-2 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 text-[11px] text-emerald-400/90 bg-emerald-950/40 border border-emerald-800/40 p-2 rounded-lg">
+              <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>Exports retain exact original filenames</span>
+            </div>
+          </div>
+
+          <!-- 5. Primary Batch Action Button -->
+          <div class="space-y-2 pt-2">
+            <button type="button" id="btnProcessBatch" disabled class="w-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/30 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Process & Download All (.ZIP)</span>
+            </button>
+
+            <!-- Batch Progress Bar -->
+            <div id="batchProgressBarContainer" class="hidden space-y-1.5 pt-2">
+              <div class="flex justify-between text-xs text-slate-300">
+                <span id="batchProgressText">Processing...</span>
+              </div>
+              <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div id="batchProgressBar" class="bg-indigo-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- INTERACTIVE PREVIEW MODAL (HTML5 CANVAS) -->
+  <div id="previewModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </div>
+          <div>
+            <h3 id="previewModalTitle" class="text-sm font-bold text-white truncate max-w-sm">photo.jpg</h3>
+            <p id="previewModalDims" class="text-xs text-slate-400">1920 × 1080 px</p>
+          </div>
+        </div>
+
+        <!-- View Switcher Tabs -->
+        <div class="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700">
+          <button id="tabViewOverlay" class="px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition-all">
+            Overlay & Bounds
+          </button>
+          <button id="tabViewRendered" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all">
+            Rendered Preview
+          </button>
+        </div>
+
+        <button id="btnClosePreview" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body (Canvas / Rendered View) -->
+      <div class="relative flex-1 min-h-[460px] bg-slate-950 overflow-hidden flex items-center justify-center canvas-wrapper">
+        
+        <!-- Tab 1: Interactive HTML5 Canvas Container -->
+        <div id="canvasViewContainer" class="w-full h-full flex items-center justify-center relative">
+          <canvas id="cropPreviewCanvas" class="w-full h-full block"></canvas>
+
+          <!-- Canvas Floating Controls -->
+          <div class="absolute bottom-4 left-4 flex items-center gap-2 bg-slate-900/90 border border-slate-800 p-1.5 rounded-xl shadow-lg backdrop-blur">
+            <button id="btnZoomIn" class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800" title="Zoom In">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            </button>
+            <button id="btnZoomOut" class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800" title="Zoom Out">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6"/></svg>
+            </button>
+            <button id="btnZoomFit" class="px-2 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800" title="Fit to Screen">
+              Fit
+            </button>
+
+            <div class="h-4 w-px bg-slate-700 mx-1"></div>
+
+            <label class="flex items-center gap-1.5 text-xs text-slate-300 px-1 cursor-pointer">
+              <input type="checkbox" id="chkShowFaces" checked class="rounded border-slate-700 bg-slate-800 text-indigo-500 focus:ring-0">
+              <span>Face Box</span>
+            </label>
+
+            <label class="flex items-center gap-1.5 text-xs text-slate-300 px-1 cursor-pointer">
+              <input type="checkbox" id="chkShowGrid" checked class="rounded border-slate-700 bg-slate-800 text-indigo-500 focus:ring-0">
+              <span>Grid</span>
+            </label>
+          </div>
+
+          <div class="absolute top-4 right-4 bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 px-3 py-1.5 rounded-xl shadow-lg backdrop-blur">
+            💡 Drag inside box to move • Drag corners to resize
+          </div>
+        </div>
+
+        <!-- Tab 2: Rendered Result View Container -->
+        <div id="renderedViewContainer" class="hidden w-full h-full flex items-center justify-center p-6 relative">
+          <div id="renderedPreviewSpinner" class="hidden absolute inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-10">
+            <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl text-xs text-indigo-400 shadow-xl">
+              <span class="animate-spin">⏳</span> Generating real-time render...
+            </div>
+          </div>
+          <img id="renderedPreviewImage" class="max-h-[500px] max-w-full object-contain rounded-lg shadow-2xl border border-slate-800" alt="Cropped Preview">
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3.5 border-t border-slate-800 bg-slate-900/95 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <button id="btnResetCustomCrop" class="text-xs text-slate-400 hover:text-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">
+            Reset to Auto
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="btnDownloadSingle" class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 px-4 py-2 rounded-xl transition-all flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download This Photo
+          </button>
+
+          <button id="btnApplyCustom" class="text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl transition-all shadow-md shadow-indigo-600/30">
+            Save & Close
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="/static/js/canvas.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
