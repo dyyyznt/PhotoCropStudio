@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# PyInstaller build artifacts
+build/
+dist/
+*.spec.bak
+
+# Native app build output
+native/build/
+native/dist/
+native/.flet/
+*.exe
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Local logs
+*.log
