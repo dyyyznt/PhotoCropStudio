@@ -81,7 +81,7 @@ def run_tests():
             assert "portrait_casual.jpg" in names
             print(f"[PASS] POST /api/process-batch -> Generated ZIP with {len(names)} files matching original filenames: {names}")
 
-        print("\n🎉 ALL INTEGRATION TESTS PASSED 100% SUCCESSFULLY!")
+        print("\n[PASS] ALL INTEGRATION TESTS PASSED 100% SUCCESSFULLY!")
 
     finally:
         server.should_exit = True
